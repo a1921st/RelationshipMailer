@@ -85,14 +85,20 @@ class User < ApplicationRecord
   
   # ユーザーをフォローする
   def follow(other_user)
-    following << other_user
+    active_relationships.create(followed_id: other_user.id)
+    if other_user.follow_notification
+      Relationship.send_follow_email(other_user, self)
+    end
   end
 
   # ユーザーをフォロー解除する
   def unfollow(other_user)
     active_relationships.find_by(followed_id: other_user.id).destroy
+    if other_user.follow_notification
+      Relationship.send_unfollow_email(other_user, self)
+    end
   end
-
+  
   # 現在のユーザーがフォローしてたらtrueを返す
   def following?(other_user)
     following.include?(other_user)
@@ -125,6 +131,16 @@ class User < ApplicationRecord
   def password_reset_expired?
     reset_sent_at < 2.hours.ago
   end
+  
+  def follow(other_user)
+    active_relationships.create(followed_id: other_user.id)
+    Relationship.send_follow_email(other_user, self)
+  end
+
+  def unfollow(other_user)
+    active_relationships.find_by(followed_id: other_user.id).destroy
+    Relationship.send_unfollow_email(other_user, self)
+  end  
   
   private
 

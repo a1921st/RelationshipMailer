@@ -3,6 +3,7 @@ require 'test_helper'
 class FollowingTest < ActionDispatch::IntegrationTest
 
   def setup
+    ActionMailer::Base.deliveries.clear
     @user  = users(:michael)
     @other = users(:archer)
     log_in_as(@user)
@@ -53,4 +54,18 @@ class FollowingTest < ActionDispatch::IntegrationTest
       delete relationship_path(relationship), xhr: true
     end
   end
+  
+  #フォロー通知テスト↓↓
+  test "should send follow notification email" do
+    post relationships_path, params: {followed_id: @other.id}
+    assert_equal 1, ActionMailer::Base.deliveries.size
+  end
+
+  test "should send unfollow notification email" do
+    @user.follow(@other)
+    relationship = @user.active_relationships.find_by(followed_id: @other.id)
+    delete relationship_path(relationship)
+    assert_equal 2, ActionMailer::Base.deliveries.size # follow email and unfollow email
+  end
+
 end  

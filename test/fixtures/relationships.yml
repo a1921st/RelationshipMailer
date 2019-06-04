@@ -13,3 +13,12 @@ three:
 four:
   follower: archer
   followed: michael
+
+five:
+  follower: michael
+  followed: hogehoge
+
+six:
+  follower: hogehoge
+  followed: michael
+
